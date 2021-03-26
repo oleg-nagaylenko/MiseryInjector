@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DirectoryScannerTest {
     private DirectoryScanner scanner;
@@ -29,10 +31,11 @@ public class DirectoryScannerTest {
     }
 
     @Test
-    public void shouldReturnSetOfClasses() {
+    public void shouldReturnSetWithTestClass() {
         //given
         //when
-        System.out.println(scanner.getAllClasses());
+        Set<Class<?>> actionSet = scanner.getAllClasses();
         //then
+        assertTrue(actionSet.contains(DirectoryScannerTest.class));
     }
 }
