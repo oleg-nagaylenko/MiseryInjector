@@ -1,4 +1,4 @@
 package com.nanomachine.di.testdata;
 
-public class EmptyClass {
+public class EmptyClass implements EmptyEntity {
 }
