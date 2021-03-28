@@ -4,11 +4,13 @@ import com.nanomachine.di.constants.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DirectoryScanner {
     private final Path classPath;
@@ -17,6 +19,12 @@ public class DirectoryScanner {
     public DirectoryScanner(Class<?> startupClass) {
         this.classPath = getClassPath(startupClass);
         findAllClasses();
+    }
+
+    public Set<Class<?>> getClassesByAnnotation(Class<? extends Annotation> annotationType) {
+        return this.foundClasses.stream()
+                .filter(i -> i.isAnnotationPresent(annotationType))
+                .collect(Collectors.toSet());
     }
 
     public Set<Class<?>> getAllClasses() {

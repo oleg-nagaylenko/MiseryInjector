@@ -1,5 +1,6 @@
 package com.nanomachine.di.config;
 
+import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.scanner.DirectoryScanner;
 
 import java.lang.reflect.InvocationTargetException;
@@ -12,7 +13,8 @@ public class Configuration {
     }
 
     public Configuration(DirectoryScanner directoryScanner) {
-        directoryScanner.getAllClasses();
+        Set<Class<?>> classes =directoryScanner.getClassesByAnnotation(Component.class);
+        classes.forEach(cls -> register(cls).complete());
     }
 
     public RegistrationService register(Class<?> cls) {
