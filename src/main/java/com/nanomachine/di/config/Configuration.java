@@ -16,30 +16,14 @@ public class Configuration {
 
     public Configuration(DirectoryScanner directoryScanner) {
         Set<Class<?>> classes = directoryScanner.getClassesByAnnotation(Component.class);
-        //classes.forEach(cls -> register(cls).complete());
         register(classes);
     }
 
-    public RegistrationService register(Class<?> cls) {
-        Object instance = loadObject(cls);
-        return new RegistrationService(instance);
-    }
-
-    private Object loadObject(Class<?> cls) {
-        try {
-            return cls.getConstructors()[0].newInstance();
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            throw new RuntimeException(e); //ToDo: throw a new config exception
+    public void register(Class<?> cls) {
+        if (!cls.isAnnotationPresent(Component.class)) {
+            throw new RuntimeException();
         }
-    }
-
-    private Object loadObject(Constructor<?> constructor, Object ... arguments) {
-        int argumentCount = constructor.getParameterCount();
-        try {
-            return argumentCount > 0 ? constructor.newInstance(arguments) : constructor.newInstance();
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            throw new RuntimeException(e); //ToDo: throw a new config exception
-        }
+        registerBean(cls);
     }
 
     @SuppressWarnings("unchecked")
@@ -52,22 +36,20 @@ public class Configuration {
         return (T) this.beanStorage.get(key);
     }
 
-    public class RegistrationService {
-        private Object instance;
-        private Class<?> type;
-
-        public RegistrationService(Object instance) {
-            this.instance = instance;
-            this.type = instance.getClass();
+    private Object loadObject(Constructor<?> constructor, Object ... arguments) {
+        int argumentCount = constructor.getParameterCount();
+        try {
+            return argumentCount > 0 ? constructor.newInstance(arguments) : constructor.newInstance();
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            throw new RuntimeException(e); //ToDo: throw a new config exception
         }
+    }
 
-        public RegistrationService as(Class<?> type) {
-            this.type = type;
-            return this;
-        }
-
-        public void complete() {
-            beanStorage.put(this.type, this.instance);
+    private void register(Set<Class<?>> classes) {
+        for (Class<?> cls : classes) {
+            if (!beanStorage.containsKey(cls)) {
+                registerBean(cls);
+            }
         }
     }
 
@@ -78,29 +60,40 @@ public class Configuration {
                 .findFirst().orElse(constructors[0]);
     }
 
-    private void register(Set<Class<?>> foundClasses) {
-        foundClasses.forEach(this::registerBean);
-    }
-
-    public Object registerBean(Class<?> cls) {
+    private Object registerBean(Class<?> cls) {
         Constructor<?> constructor = getAnnotatedConstructor(cls);
-        List<Object> arguments = new ArrayList<>();
+        Object[] arguments = new Object[constructor.getParameterCount()];
         Class<?>[] params = constructor.getParameterTypes();
 
-        for (Class<?> param : params) {
-            if (beanStorage.containsKey(param)) {
-                arguments.add(beanStorage.get(param));
+        for (int i = 0; i < arguments.length; i++) {
+            if (beanStorage.containsKey(params[i])) {
+                arguments[i] = beanStorage.get(params[i]);
             } else {
-                arguments.add(registerBean(param));
+                arguments[i] = registerBean(params[i]);
             }
         }
 
-        Object object = loadObject(constructor, arguments.toArray());
-        new RegistrationService(object).complete();
+        Object object = loadObject(constructor, arguments);
+        addToStorage(new BeanDefinition(object));
         return object;
+    }
+
+    public void addToStorage(BeanDefinition definition) {
+        beanStorage.put(definition.type, definition.instance);
     }
 
     public Map<Class<?>, Object> getBeanStorage() {
         return beanStorage;
     }
+
+    public class BeanDefinition {
+        private Class<?> type;
+        private Object instance;
+
+        BeanDefinition(Object instance) {
+            this.type = instance.getClass();
+            this.instance = instance;
+        }
+    }
+
 }
