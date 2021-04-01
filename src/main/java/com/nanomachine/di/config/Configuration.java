@@ -2,20 +2,23 @@ package com.nanomachine.di.config;
 
 import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.annotations.Inject;
+import com.nanomachine.di.annotations.Key;
 import com.nanomachine.di.scanner.DirectoryScanner;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Configuration {
-    private final Map<Class<?>, Object> beanStorage = new HashMap<>();
+    private final Map<Identity, Object> beanStorage = new HashMap<>();
 
     public Configuration() {
     }
 
     public Configuration(DirectoryScanner directoryScanner) {
         Set<Class<?>> classes = directoryScanner.getClassesByAnnotation(Component.class);
+        classes = new ClassSorter().sort(classes);
         register(classes);
     }
 
@@ -28,12 +31,50 @@ public class Configuration {
 
     @SuppressWarnings("unchecked")
     public <T> T getInstance(Class<T> type) {
-        Class<?> key = beanStorage.keySet().stream()
-                .filter(k -> Objects.equals(k, type))
+        Stream<Identity> identities = getIdentityStreamByType(type);
+        Identity identity = identities
                 .findFirst()
                 .orElseThrow(RuntimeException::new);
 
-        return (T) this.beanStorage.get(key);
+        return (T) this.beanStorage.get(identity);
+    }
+
+    private void register(Set<Class<?>> classes) {
+        classes.forEach(this::registerBean);
+    }
+
+    private void registerBean(Class<?> cls) {
+        Constructor<?> constructor = getAnnotatedConstructor(cls);
+        Class<?>[] paramTypes = constructor.getParameterTypes();
+        Object[] arguments = new Object[paramTypes.length];
+
+        for (int i = 0; i < paramTypes.length; i++) {
+            Key key = paramTypes[i].getAnnotation(Key.class);
+            if (key == null) {
+                arguments[i] = getInstance(paramTypes[i]);
+            } else {
+                arguments[i] = getInstance(paramTypes[i], key.value());
+            }
+        }
+
+        Object object = loadObject(constructor, arguments);
+        addToStorage(new BeanDetail(object));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getInstance(Class<?> type, String key) {
+        Stream<Identity> identities = getIdentityStreamByType(type);
+        Identity identity = identities.filter(i -> Objects.equals(i.key, key))
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+
+        return (T) beanStorage.get(identity);
+    }
+
+    private Stream<Identity> getIdentityStreamByType(Class<?> type) {
+        return beanStorage.keySet()
+                .stream()
+                .filter(i -> Objects.equals(i.type, type));
     }
 
     private Object loadObject(Constructor<?> constructor, Object ... arguments) {
@@ -45,14 +86,6 @@ public class Configuration {
         }
     }
 
-    private void register(Set<Class<?>> classes) {
-        for (Class<?> cls : classes) {
-            if (!beanStorage.containsKey(cls)) {
-                registerBean(cls);
-            }
-        }
-    }
-
     private Constructor<?> getAnnotatedConstructor(Class<?> cls) {
         Constructor<?>[] constructors = cls.getConstructors();
         return Arrays.stream(constructors)
@@ -60,40 +93,82 @@ public class Configuration {
                 .findFirst().orElse(constructors[0]);
     }
 
-    private Object registerBean(Class<?> cls) {
-        Constructor<?> constructor = getAnnotatedConstructor(cls);
-        Object[] arguments = new Object[constructor.getParameterCount()];
-        Class<?>[] params = constructor.getParameterTypes();
-
-        for (int i = 0; i < arguments.length; i++) {
-            if (beanStorage.containsKey(params[i])) {
-                arguments[i] = beanStorage.get(params[i]);
-            } else {
-                arguments[i] = registerBean(params[i]);
-            }
-        }
-
-        Object object = loadObject(constructor, arguments);
-        addToStorage(new BeanDefinition(object));
-        return object;
+    private void addToStorage(BeanDetail detail) {
+        beanStorage.put(new Identity(detail.type, detail.key), detail.instance);
     }
 
-    public void addToStorage(BeanDefinition definition) {
-        beanStorage.put(definition.type, definition.instance);
-    }
 
-    public Map<Class<?>, Object> getBeanStorage() {
-        return beanStorage;
-    }
-
-    public class BeanDefinition {
+    public static class BeanDetail {
         private Class<?> type;
+        private String key;
         private Object instance;
 
-        BeanDefinition(Object instance) {
+        BeanDetail(Object instance) {
             this.type = instance.getClass();
             this.instance = instance;
+            this.key = getKey();
+        }
+
+        private BeanDetail withType(Class<?> type) {
+            this.type = type;
+            return this;
+        }
+
+        private String getKey() {
+            Key key = this.type.getAnnotation(Key.class);
+            if (key != null) {
+                return key.value();
+            }
+            return null;
         }
     }
 
+
+    private class ClassSorter {
+        private final Set<Class<?>> sortedClasses = new LinkedHashSet<>();
+
+        public Set<Class<?>> sort(Set<Class<?>> classes) {
+            classes.forEach(this::sortClassByDependency);
+            return sortedClasses;
+        }
+
+        private void sortClassByDependency(Class<?> cls) {
+            Constructor<?> constructor = getAnnotatedConstructor(cls);
+            int parameterCount = constructor.getParameterCount();
+
+            if (parameterCount == 0) {
+                sortedClasses.add(cls);
+                return;
+            }
+
+            Class<?>[] paramTypes = constructor.getParameterTypes();
+            Arrays.stream(paramTypes).forEach(this::sortClassByDependency);
+            sortedClasses.add(cls);
+        }
+    }
+
+
+    private static class Identity {
+        private final Class<?> type;
+        private final String key;
+
+        public Identity(Class<?> type, String key) {
+            this.type = type;
+            this.key = key;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Identity)) return false;
+            Identity identity = (Identity) o;
+            return Objects.equals(type, identity.type) &&
+                    Objects.equals(key, identity.key);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, key);
+        }
+    }
 }

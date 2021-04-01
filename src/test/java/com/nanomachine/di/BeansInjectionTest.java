@@ -3,6 +3,7 @@ package com.nanomachine.di;
 import com.nanomachine.di.config.Configuration;
 import com.nanomachine.di.injector.Injector;
 import com.nanomachine.di.scanner.DirectoryScanner;
+import com.nanomachine.di.testdata.ClassWithAnnotation;
 import com.nanomachine.di.testdata.ClassWithDependency;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ public class BeansInjectionTest {
     public void shouldReturnBeanWithDependency() {
         //given
         Configuration configuration = new Configuration();
+        configuration.register(ClassWithAnnotation.class);
         configuration.register(ClassWithDependency.class);
         Injector injector = new Injector(configuration);
         //when
