@@ -1,5 +1,9 @@
 package com.nanomachine.di.testdata;
 
+import com.nanomachine.di.annotations.Component;
+import com.nanomachine.di.annotations.ComponentType;
 
-public class EmptyClass implements EmptyEntity {
+@Component
+@ComponentType(EmptyEntity.class)
+public class EmptyClass implements EmptyEntity{
 }

@@ -3,11 +3,13 @@ package com.nanomachine.di.config;
 import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.annotations.Inject;
 import com.nanomachine.di.annotations.Key;
+import com.nanomachine.di.config.bean.BeanDefinition;
 import com.nanomachine.di.scanner.DirectoryScanner;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Configuration {
@@ -39,6 +41,57 @@ public class Configuration {
         return (T) this.beanStorage.get(identity);
     }
 
+    public void test(Set<Class<?>> classes) {
+        new BeanRegistration(classes).register();
+        System.out.println(this.beanStorage);
+    }
+
+    //----------------------------------
+
+    class BeanRegistration {
+        private Map<Identity, BeanDefinition> beanDefinitions;
+
+        public BeanRegistration(Set<Class<?>> classes) {
+            this.beanDefinitions = createBeanDefinitionCollection(classes);
+        }
+
+        private void register() {
+            for (Map.Entry<Identity, BeanDefinition> entry : beanDefinitions.entrySet()) {
+                Object obj = recursiveBeanCreation(entry.getValue());
+                System.out.println(obj.getClass());
+            }
+        }
+
+        private Object recursiveBeanCreation(BeanDefinition definition) {
+            Constructor<?> constructor = definition.getConstructor();
+            Class<?>[] paramTypes = constructor.getParameterTypes();
+            Object[] parameters = new Object[paramTypes.length];
+
+            for (int i = 0; i < paramTypes.length; i++) {
+                Identity id = createIdentity(paramTypes[i]);
+                parameters[i] = recursiveBeanCreation(beanDefinitions.get(id));
+            }
+            Object instance = loadObject(constructor, parameters);
+            beanStorage.put(definition.getIdentity(), instance);
+            return instance;
+        }
+
+        private Map<Identity, BeanDefinition> createBeanDefinitionCollection(Set<Class<?>> classes) {
+            return classes.stream()
+                    .map(BeanDefinition::new)
+                    .collect(Collectors.toMap(BeanDefinition::getIdentity,i -> i));
+        }
+
+        private Identity createIdentity(Class<?> type) {
+            Key key = type.getAnnotation(Key.class);
+            if  (key != null) {
+                return new Identity(type,key.value());
+            }
+            return new Identity(type,null);
+        }
+    }
+
+    //----------------------------------
     private void register(Set<Class<?>> classes) {
         classes.forEach(this::registerBean);
     }
@@ -64,7 +117,7 @@ public class Configuration {
     @SuppressWarnings("unchecked")
     private <T> T getInstance(Class<?> type, String key) {
         Stream<Identity> identities = getIdentityStreamByType(type);
-        Identity identity = identities.filter(i -> Objects.equals(i.key, key))
+        Identity identity = identities.filter(i -> Objects.equals(i.getKey(), key))
                 .findFirst()
                 .orElseThrow(RuntimeException::new);
 
@@ -74,7 +127,7 @@ public class Configuration {
     private Stream<Identity> getIdentityStreamByType(Class<?> type) {
         return beanStorage.keySet()
                 .stream()
-                .filter(i -> Objects.equals(i.type, type));
+                .filter(i -> Objects.equals(i.getType(), type));
     }
 
     private Object loadObject(Constructor<?> constructor, Object ... arguments) {
@@ -148,27 +201,4 @@ public class Configuration {
     }
 
 
-    private static class Identity {
-        private final Class<?> type;
-        private final String key;
-
-        public Identity(Class<?> type, String key) {
-            this.type = type;
-            this.key = key;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Identity)) return false;
-            Identity identity = (Identity) o;
-            return Objects.equals(type, identity.type) &&
-                    Objects.equals(key, identity.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(type, key);
-        }
-    }
 }

@@ -5,6 +5,7 @@ import com.nanomachine.di.injector.Injector;
 import com.nanomachine.di.scanner.DirectoryScanner;
 import com.nanomachine.di.testdata.ClassWithAnnotation;
 import com.nanomachine.di.testdata.ClassWithDependency;
+import com.nanomachine.di.testdata.EmptyClass;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,6 +17,7 @@ public class BeansInjectionTest {
         //given
         Configuration configuration = new Configuration();
         configuration.register(ClassWithAnnotation.class);
+        configuration.register(EmptyClass.class);
         configuration.register(ClassWithDependency.class);
         Injector injector = new Injector(configuration);
         //when

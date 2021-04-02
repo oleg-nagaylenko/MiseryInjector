@@ -21,6 +21,8 @@ public class DirectoryScanner {
         findAllClasses();
     }
 
+
+
     public Set<Class<?>> getClassesByAnnotation(Class<? extends Annotation> annotationType) {
         return this.foundClasses.stream()
                 .filter(i -> i.isAnnotationPresent(annotationType))

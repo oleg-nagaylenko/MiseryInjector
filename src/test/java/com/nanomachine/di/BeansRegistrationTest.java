@@ -3,7 +3,7 @@ package com.nanomachine.di;
 import com.nanomachine.di.config.Configuration;
 import com.nanomachine.di.injector.Injector;
 import com.nanomachine.di.testdata.ClassWithAnnotation;
-import com.nanomachine.di.testdata.EmptyClass;
+import com.nanomachine.di.testdata.ClassWithoutComponent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,6 +28,6 @@ public class BeansRegistrationTest {
         //given
         Configuration configuration = new Configuration();
         //when
-        assertThrows(RuntimeException.class, () -> configuration.register(EmptyClass.class));
+        assertThrows(RuntimeException.class, () -> configuration.register(ClassWithoutComponent.class));
     }
 }
