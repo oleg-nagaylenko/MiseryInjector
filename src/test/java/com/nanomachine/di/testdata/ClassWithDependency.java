@@ -6,20 +6,22 @@ import com.nanomachine.di.annotations.Key;
 
 @Component
 public class ClassWithDependency {
-    private ClassWithAnnotation classWithAnnotation;
-    private EmptyEntity emptyEntity;
+    private ClassWithAnnotationAndKey classWithAnnotationAndKey;
+    private ClassWithSmth classWithComponentTypeAndKey;
 
     @Inject
-    public ClassWithDependency(@Key("specific-obj") ClassWithAnnotation classWithAnnotation, EmptyEntity emptyEntity) {
-        this.classWithAnnotation = classWithAnnotation;
-        this.emptyEntity = emptyEntity;
+    public ClassWithDependency(@Key("key-comp") ClassWithAnnotationAndKey classWithAnnotationAndKey,
+                               @Key("type-key-comp") ClassWithSmth classWithComponentTypeAndKey) {
+
+        this.classWithAnnotationAndKey = classWithAnnotationAndKey;
+        this.classWithComponentTypeAndKey = classWithComponentTypeAndKey;
     }
 
-    public ClassWithAnnotation getClassWithAnnotation() {
-        return classWithAnnotation;
+    public ClassWithAnnotationAndKey getClassWithAnnotationAndKey() {
+        return classWithAnnotationAndKey;
     }
 
-    public EmptyEntity getEmptyEntity() {
-        return emptyEntity;
+    public ClassWithSmth getClassWithComponentTypeAndKey() {
+        return classWithComponentTypeAndKey;
     }
 }

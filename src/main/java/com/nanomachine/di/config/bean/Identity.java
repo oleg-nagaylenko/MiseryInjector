@@ -1,4 +1,4 @@
-package com.nanomachine.di.config;
+package com.nanomachine.di.config.bean;
 
 import java.util.Objects;
 

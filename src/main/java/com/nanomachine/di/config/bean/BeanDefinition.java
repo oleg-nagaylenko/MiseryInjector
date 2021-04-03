@@ -3,16 +3,15 @@ package com.nanomachine.di.config.bean;
 import com.nanomachine.di.annotations.ComponentType;
 import com.nanomachine.di.annotations.Inject;
 import com.nanomachine.di.annotations.Key;
-import com.nanomachine.di.config.Identity;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
 public class BeanDefinition {
-    private Class<?> objectClass;
-    private Class<?> beanType;
-    private String key;
-    private Constructor<?> constructor;
+    private final Class<?> objectClass;
+    private final Class<?> beanType;
+    private final String key;
+    private final Constructor<?> constructor;
 
     public BeanDefinition(Class<?> objectClass) {
         this.objectClass = objectClass;

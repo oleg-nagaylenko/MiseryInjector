@@ -1,9 +1,5 @@
 package com.nanomachine.di;
 
-/**
- * Hello world!
- *
- */
 public class MiseryInjector
 {
     public static void main( String[] args )

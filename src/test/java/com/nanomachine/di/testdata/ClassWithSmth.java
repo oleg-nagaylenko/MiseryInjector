@@ -1,4 +1,4 @@
 package com.nanomachine.di.testdata;
 
-public class ClassWithoutComponent {
+public interface ClassWithSmth {
 }

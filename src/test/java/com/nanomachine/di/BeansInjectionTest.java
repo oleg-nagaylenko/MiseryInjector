@@ -3,9 +3,7 @@ package com.nanomachine.di;
 import com.nanomachine.di.config.Configuration;
 import com.nanomachine.di.injector.Injector;
 import com.nanomachine.di.scanner.DirectoryScanner;
-import com.nanomachine.di.testdata.ClassWithAnnotation;
-import com.nanomachine.di.testdata.ClassWithDependency;
-import com.nanomachine.di.testdata.EmptyClass;
+import com.nanomachine.di.testdata.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,7 +14,7 @@ public class BeansInjectionTest {
     public void shouldReturnBeanWithDependency() {
         //given
         Configuration configuration = new Configuration();
-        configuration.register(ClassWithAnnotation.class);
+        configuration.register(ClassWithAnnotationAndKey.class);
         configuration.register(EmptyClass.class);
         configuration.register(ClassWithDependency.class);
         Injector injector = new Injector(configuration);
@@ -24,7 +22,7 @@ public class BeansInjectionTest {
         ClassWithDependency cls = injector.getBean(ClassWithDependency.class);
         //then
         assertNotNull(cls);
-        assertNotNull(cls.getClassWithAnnotation());
+        assertNotNull(cls.getClassWithAnnotationAndKey());
     }
 
     @Test
@@ -37,6 +35,20 @@ public class BeansInjectionTest {
         ClassWithDependency cls = injector.getBean(ClassWithDependency.class);
         //then
         assertNotNull(cls);
-        assertNotNull(cls.getClassWithAnnotation());
+        assertNotNull(cls.getClassWithAnnotationAndKey());
+        assertNotNull(cls.getClassWithComponentTypeAndKey());
+    }
+
+    @Test
+    public void shouldReturnBean() {
+        Configuration configuration = new Configuration();
+        configuration.register(EmptyClass.class);
+        configuration.register(ClassWithComponentTypeAndKey.class);
+        Injector injector = new Injector(configuration);
+
+        ClassWithComponentTypeAndKey cls = (ClassWithComponentTypeAndKey) injector.getBean(ClassWithSmth.class);
+
+        assertNotNull(cls);
+        assertNotNull(cls.getEmptyEntity());
     }
 }
