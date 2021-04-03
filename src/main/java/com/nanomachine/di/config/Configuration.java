@@ -80,15 +80,14 @@ public class Configuration {
             Object[] parameters = new Object[paramTypes.length];
 
             for (int i = 0; i < paramTypes.length; i++) {
-                Parameter parameter = constructor.getParameters()[i];
-                Identity id = createIdentity(paramTypes[i], parameter);
-
+                Identity id = createIdentity(paramTypes[i], constructor.getParameters()[i]);
                 if (beanStorage.containsKey(id)) {
                     parameters[i] = beanStorage.get(id);
                     continue;
                 }
                 parameters[i] = recursiveBeanCreation(beanDefinitions.get(id));
             }
+
             Object instance = loadObject(constructor, parameters);
             beanStorage.put(definition.getIdentity(), instance);
             return instance;
@@ -110,12 +109,10 @@ public class Configuration {
         }
 
         private Identity createIdentity(Class<?> type, Parameter parameter) {
-
-            Key key = parameter.getAnnotation(Key.class);
-            if  (key != null) {
-                return new Identity(type,key.value());
+            if (parameter.isAnnotationPresent(Key.class)) {
+                return new Identity(type, parameter.getAnnotation(Key.class).value());
             }
-            return new Identity(type,null);
+            return new Identity(type, "");
         }
     }
 

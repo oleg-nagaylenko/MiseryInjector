@@ -37,7 +37,7 @@ public class BeanDefinition {
         if (key != null) {
             return key.value();
         }
-        return null; //ToDO: remove null
+        return "";
     }
 
     private Constructor<?> getAnnotatedConstructor() {

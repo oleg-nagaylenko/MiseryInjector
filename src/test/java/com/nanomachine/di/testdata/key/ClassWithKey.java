@@ -1,9 +1,9 @@
-package com.nanomachine.di.testdata;
+package com.nanomachine.di.testdata.key;
 
 import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.annotations.Key;
 
 @Component
-@Key("key-comp")
-public class ClassWithAnnotationAndKey {
+@Key("class-with-key")
+public class ClassWithKey {
 }

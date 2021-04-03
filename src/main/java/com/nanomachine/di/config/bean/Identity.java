@@ -8,7 +8,15 @@ public class Identity {
 
     public Identity(Class<?> type, String key) {
         this.type = type;
-        this.key = key;
+        this.key = resolveKey(key);
+    }
+
+    private String resolveKey(String key) {
+        if (key != null && !key.isEmpty()) {
+            return key;
+        }
+        String className = this.type.getSimpleName();
+        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
     public Class<?> getType() {

@@ -2,7 +2,7 @@ package com.nanomachine.di;
 
 import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.scanner.DirectoryScanner;
-import com.nanomachine.di.testdata.ClassWithAnnotationAndKey;
+import com.nanomachine.di.testdata.component.EmptyClass;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +40,7 @@ public class DirectoryScannerTest {
         Set<Class<?>> actionSet = scanner.getClassesByAnnotation(Component.class);
         //then
         assertNotNull(actionSet);
-        assertTrue(actionSet.contains(ClassWithAnnotationAndKey.class));
+        assertTrue(actionSet.contains(EmptyClass.class));
     }
+
 }
