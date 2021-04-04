@@ -4,6 +4,7 @@ import com.nanomachine.di.annotations.Component;
 import com.nanomachine.di.annotations.Key;
 import com.nanomachine.di.config.bean.BeanDefinition;
 import com.nanomachine.di.config.bean.Identity;
+import com.nanomachine.di.exceptions.RegistrationException;
 import com.nanomachine.di.scanner.DirectoryScanner;
 
 import java.lang.reflect.Constructor;
@@ -30,7 +31,7 @@ public class Configuration {
 
     public void register(Class<?> cls) {
         if (!cls.isAnnotationPresent(Component.class)) {
-            throw new RuntimeException(); //ToDO : throw a new spec exception
+            throw new RegistrationException( cls.getSimpleName() + " class does not present Component annotation");
         }
         this.beanRegistration.register(cls);
     }
@@ -53,11 +54,7 @@ public class Configuration {
 
 
     private class BeanRegistration {
-        private final Map<Identity, BeanDefinition> beanDefinitions;
-
-        private BeanRegistration() {
-            this.beanDefinitions = new HashMap<>();
-        }
+        private final Map<Identity, BeanDefinition> beanDefinitions = new HashMap<>();;
 
         private void register(Class<?> cls) {
             register(Set.of(cls));
@@ -98,7 +95,8 @@ public class Configuration {
             try {
                 return argumentCount > 0 ? constructor.newInstance(arguments) : constructor.newInstance();
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                throw new RuntimeException(e); //ToDo: throw a new config exception
+                throw new RegistrationException("Registration service cannot load object by constructor - "
+                                                + constructor.getName(), e);
             }
         }
 

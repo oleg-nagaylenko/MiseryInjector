@@ -16,7 +16,7 @@ public class BeanDefinition {
     public BeanDefinition(Class<?> objectClass) {
         this.objectClass = objectClass;
         this.beanType = findBeanType();
-        this.key = getKey();
+        this.key = findKey();
         this.constructor = getAnnotatedConstructor();
     }
 
@@ -26,18 +26,12 @@ public class BeanDefinition {
 
     private Class<?> findBeanType() {
         ComponentType type = this.objectClass.getAnnotation(ComponentType.class);
-        if (type != null) {
-            return type.value();
-        }
-        return this.objectClass;
+        return type != null ? type.value() : this.objectClass;
     }
 
-    private String getKey() {
+    private String findKey() {
         Key key = this.objectClass.getAnnotation(Key.class);
-        if (key != null) {
-            return key.value();
-        }
-        return "";
+        return key != null ? key.value() : "";
     }
 
     private Constructor<?> getAnnotatedConstructor() {

@@ -1,6 +1,7 @@
 package com.nanomachine.di.scanner;
 
 import com.nanomachine.di.constants.Constants;
+import com.nanomachine.di.exceptions.ScannerException;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class DirectoryScanner {
         try {
             Files.walkFileTree(classPath, visitor);
         } catch (IOException e) {
-            throw new RuntimeException(e);   //ToDo: throw a new scanner exception
+            throw new ScannerException(e);
         }
     }
 
@@ -65,7 +66,7 @@ public class DirectoryScanner {
         try {
             return Class.forName(cls);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);   //ToDo: throw a new scanner exception
+            throw new ScannerException("Scanner cannot locate class - " + cls, e);
         }
     }
 
@@ -73,7 +74,7 @@ public class DirectoryScanner {
         try {
             return Path.of(startupClass.getProtectionDomain().getCodeSource().getLocation().toURI());
         } catch (URISyntaxException e) {
-            throw new RuntimeException(e);   //ToDo: throw a new scanner exception
+            throw new ScannerException("Scanner cannot find classPath by starting class - " + startupClass.getSimpleName(), e);
         }
     }
 
